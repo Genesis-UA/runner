@@ -3,6 +3,7 @@
 # 2. Заходим по ссылке в Google Cloud Shell: https://shell.cloud.google.com/
 # 3. В командной строке терминала вводим команду: curl -s https://raw.githubusercontent.com/Genesis-UA/runner/main/run.sh | bash
 
+cd ~
 rm -rf mhddos_proxy
 git clone https://github.com/porthole-ascend-cinnamon/mhddos_proxy.git
 cd mhddos_proxy
