@@ -1,3 +1,5 @@
+# curl -s https://raw.githubusercontent.com/Genesis-UA/runner/main/init.sh | bash
+
 sudo apt update -qq -y
 sudo apt install git python3 python3-pip -qq -y
 # for some virtual cloud systems based on debian (like GC)
