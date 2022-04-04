@@ -11,7 +11,7 @@ python3 -m pip install -r requirements.txt
 threads="${1:-2000}"; threads="-t $threads"
 rpc="--rpc 2000"
 proxy_timer_update="-p 3600"
-debug="--debug"
+debug="--table"
 
 # Restart attacks and update targets every 15 minutes
 while true
