@@ -2,8 +2,8 @@
 
 sudo apt update -y
 cd ~
-sudo rm -r auto_mhddos_alexnest
+sudo rm -r runner
 sudo apt install git -y
-git clone https://github.com/alexnest-ua/auto_mhddos_alexnest
-cd ~/auto_mhddos_alexnest
+git clone https://github.com/Genesis-UA/runner
+cd ~/runner
 bash setup.sh
