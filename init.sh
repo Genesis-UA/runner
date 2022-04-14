@@ -14,5 +14,5 @@ sudo apt install --upgrade screen -y
 sudo rm -r mhddos_proxy
 ulimit -n 1048576
 git clone https://github.com/porthole-ascend-cinnamon/mhddos_proxy.git
+sudo python3 -m pip install -r ~/mhddos_proxy/requirements.txt
 cd ~/mhddos_proxy
-sudo python3 -m pip install -r requirements.txt
